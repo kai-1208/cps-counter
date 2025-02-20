@@ -9,8 +9,9 @@ class SettingScreen(QWidget):
     def __init__(self, main_app):
         super().__init__()
         self.main_app = main_app
-        layout = QVBoxLayout()
+        self.setFixedSize(800, 600)
 
+        layout = QVBoxLayout()
         self.label = QLabel("測定時間を選択:")
         self.combo_box = QComboBox()
         self.combo_box.addItems([str(i) for i in range(1, 61)])
@@ -112,8 +113,8 @@ class CPSMeasurementScreen(QWidget):
 def expand(ripples):
     for i in range(len(ripples)):
         if ripples[i, 2] > 0:
-            ripples[i, 3] += 50
-            ripples[i, 2] = max(0, ripples[i, 2]-17)
+            ripples[i, 3] += 70
+            ripples[i, 2] = max(0, ripples[i, 2]-15)
     return ripples
 
 class ResultScreen(QWidget):
