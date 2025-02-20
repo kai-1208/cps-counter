@@ -36,6 +36,10 @@ class CPSMeasurementScreen(QWidget):
         self.max_ripples = 20
         self.ripples = np.zeros((self.max_ripples, 4), dtype=np.float32)
 
+        self.ripple_timer = QTimer()
+        self.ripple_timer.timeout.connect(self.update_ripples)
+        self.ripple_timer.start(30)
+
         layout = QVBoxLayout()
         self.label = QLabel("画面をクリックして測定してください")
         self.cps_label = QLabel("CPS: 0")
@@ -54,7 +58,6 @@ class CPSMeasurementScreen(QWidget):
         self.cps_history = []
         self.timer = QTimer()
         self.timer.timeout.connect(self.update_cps)
-        self.timer.timeout.connect(self.update_ripples)
         self.timer.start(100)
 
     def mousePressEvent(self, event: QMouseEvent):
@@ -109,8 +112,8 @@ class CPSMeasurementScreen(QWidget):
 def expand(ripples):
     for i in range(len(ripples)):
         if ripples[i, 2] > 0:
-            ripples[i, 3] += 3
-            ripples[i, 2] = max(0, ripples[i, 2]-20)
+            ripples[i, 3] += 50
+            ripples[i, 2] = max(0, ripples[i, 2]-17)
     return ripples
 
 class ResultScreen(QWidget):
