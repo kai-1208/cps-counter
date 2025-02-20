@@ -67,8 +67,6 @@ class CPSMeasurementScreen(QWidget):
             "y": event.position().y(),
             "alpha": 255
         })
-        # self.ripple_x, self.ripple_y = event.position().x(), event.position().y()
-        # self.ripple_alpha = 255
         self.update()   
 
     def update_cps(self):
@@ -90,24 +88,13 @@ class CPSMeasurementScreen(QWidget):
             self.max_cps_label.setText(f"最大 CPS: {self.max_cps:.2f}")
 
         for ripple in self.ripples:
-            ripple["alpha"] -= 10
+            ripple["alpha"] -= 30
             if ripple["alpha"] <= 0:
                 self.ripples.remove(ripple)
         self.update()
 
-        # if self.ripple_alpha > 0:
-        #     self.ripple_alpha -= 10
-        #     self.update()
-
     
     def paintEvent(self, event):
-        # if self.ripple_x is not None and self.ripple_y is not None:
-        #     painter = QPainter(self)
-        #     painter.setBrush(QBrush(QColor(0, 150, 255, self.ripple_alpha)))
-        #     painter.setPen(Qt.NoPen)
-        #     radius = (255 - self.ripple_alpha) * 2
-        #     painter.drawEllipse(int(self.ripple_x - radius / 2), int(self.ripple_y - radius / 2), radius, radius)
-
         painter = QPainter(self)
         painter.setPen(Qt.NoPen)
 
