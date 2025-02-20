@@ -34,6 +34,7 @@ class CPSMeasurementScreen(QWidget):
         self.ripple_x = None
         self.ripple_y = None
         self.ripple_alpha = 255
+        self.ripples = []
 
         layout = QVBoxLayout()
         self.label = QLabel("画面をクリックして測定してください")
@@ -60,8 +61,14 @@ class CPSMeasurementScreen(QWidget):
             self.elapsed_timer.start()  # 最初のクリック時に測定開始
             QTimer.singleShot(self.duration, self.finish_measurement)
         self.click_count += 1
-        self.ripple_x, self.ripple_y = event.position().x(), event.position().y()
-        self.ripple_alpha = 255
+
+        self.ripples.append({
+            "x": event.position().x(),
+            "y": event.position().y(),
+            "alpha": 255
+        })
+        # self.ripple_x, self.ripple_y = event.position().x(), event.position().y()
+        # self.ripple_alpha = 255
         self.update()   
 
     def update_cps(self):
@@ -82,21 +89,38 @@ class CPSMeasurementScreen(QWidget):
             self.cps_label.setText(f"CPS: {current_cps:.2f}")
             self.max_cps_label.setText(f"最大 CPS: {self.max_cps:.2f}")
 
-        if self.ripple_alpha > 0:
-            self.ripple_alpha -= 10
-            self.update()
+        for ripple in self.ripples:
+            ripple["alpha"] -= 10
+            if ripple["alpha"] <= 0:
+                self.ripples.remove(ripple)
+        self.update()
+
+        # if self.ripple_alpha > 0:
+        #     self.ripple_alpha -= 10
+        #     self.update()
 
     
     def paintEvent(self, event):
-        if self.ripple_x is not None and self.ripple_y is not None:
-            painter = QPainter(self)
-            painter.setBrush(QBrush(QColor(0, 150, 255, self.ripple_alpha)))
-            painter.setPen(Qt.NoPen)
-            radius = (255 - self.ripple_alpha) * 2
-            painter.drawEllipse(int(self.ripple_x - radius / 2), int(self.ripple_y - radius / 2), radius, radius)
+        # if self.ripple_x is not None and self.ripple_y is not None:
+        #     painter = QPainter(self)
+        #     painter.setBrush(QBrush(QColor(0, 150, 255, self.ripple_alpha)))
+        #     painter.setPen(Qt.NoPen)
+        #     radius = (255 - self.ripple_alpha) * 2
+        #     painter.drawEllipse(int(self.ripple_x - radius / 2), int(self.ripple_y - radius / 2), radius, radius)
+
+        painter = QPainter(self)
+        painter.setPen(Qt.NoPen)
+
+        # すべての波紋を描画
+        for ripple in self.ripples:
+            painter.setBrush(QBrush(QColor(0, 150, 255, ripple["alpha"])))
+            radius = (255 - ripple["alpha"]) * 2
+            painter.drawEllipse(int(ripple["x"] - radius / 2), int(ripple["y"] - radius / 2), radius, radius)
 
     def finish_measurement(self):
         self.timer.stop()
+        self.ripples.clear()
+        self.update()
         self.main_app.show_result_screen(self.click_count, self.max_cps, self.duration / 1000, self.cps_history)
 
 class ResultScreen(QWidget):
