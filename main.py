@@ -155,9 +155,10 @@ class CPSCounter(QWidget):
     def show_result_screen(self, total_clicks, max_cps, duration, cps_history):
         self.result_screen.display_results(total_clicks, max_cps, duration, cps_history)
         self.stack.setCurrentWidget(self.result_screen)
-        
+
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = CPSCounter()
     window.show()
     sys.exit(app.exec())
+    
