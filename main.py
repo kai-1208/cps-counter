@@ -1,6 +1,8 @@
 from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QLabel, QComboBox, QStackedWidget
 from PySide6.QtCore import QTimer, Qt, QElapsedTimer
 from PySide6.QtGui import QMouseEvent, QPainter, QBrush, QColor
+from numba import njit
+import numpy as np
 import sys
 
 class SettingScreen(QWidget):
