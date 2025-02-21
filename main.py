@@ -26,6 +26,8 @@ class SettingScreen(QWidget):
         self.g_slider_ripple = self.create_slider("G", layout)
         self.b_slider_ripple = self.create_slider("B", layout)
 
+        self.color_preview_label = QLabel("波紋の色のプレビュー")
+        layout.addWidget(self.color_preview_label)
         self.color_preview_ripple = QLabel()
         self.color_preview_ripple.setFixedSize(100, 50)
         self.update_color_preview(self.color_preview_ripple, self.r_slider_ripple, self.g_slider_ripple, self.b_slider_ripple)
