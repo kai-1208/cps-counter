@@ -191,7 +191,7 @@ class ResultScreen(QWidget):
         self.graph_widget.setLabel("bottom", "時間 (秒)")
         self.graph_widget.setXRange(0, 10)
         self.graph_widget.setYRange(0, 10)
-        self.cps_plot = self.graph_widget.plot([], [], pen="b")
+        self.cps_plot = self.graph_widget.plot([], [], pen="r")
 
         self.retry_button = QPushButton("再測定")
         self.retry_button.clicked.connect(self.main_app.show_setting_screen)
