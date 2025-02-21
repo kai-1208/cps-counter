@@ -90,6 +90,7 @@ class CPSMeasurementScreen(QWidget):
         self.graph_widget.setTitle("CPS推移")
         self.graph_widget.setLabel("left", "CPS")
         self.graph_widget.setLabel("bottom", "時間 (秒)")
+        self.graph_widget.setXRange(0, 10)
         self.graph_widget.setYRange(0, 10)
         self.cps_plot = self.graph_widget.plot([], [], pen="r")
         layout.addWidget(self.graph_widget)
@@ -107,6 +108,7 @@ class CPSMeasurementScreen(QWidget):
         self.timer = QTimer()
         self.timer.timeout.connect(self.update_cps)
         self.timer.start(100)
+        self.graph_widget.setXRange(0, duration)
 
     def mousePressEvent(self, event: QMouseEvent):
         if not self.elapsed_timer.isValid():
@@ -176,6 +178,7 @@ class ResultScreen(QWidget):
         layout = QVBoxLayout()
 
         self.result_label = QLabel("測定結果")
+        self.duration_label = QLabel("測定時間: 0秒")
         self.total_clicks_label = QLabel("総クリック数: 0")
         self.avg_cps_label = QLabel("平均 CPS: 0")
         self.max_cps_label = QLabel("最大 CPS: 0")
@@ -184,6 +187,7 @@ class ResultScreen(QWidget):
         self.graph_widget.setTitle("CPS推移")
         self.graph_widget.setLabel("left", "CPS")
         self.graph_widget.setLabel("bottom", "時間 (秒)")
+        self.graph_widget.setXRange(0, 10)
         self.graph_widget.setYRange(0, 10)
         self.cps_plot = self.graph_widget.plot([], [], pen="b")
 
@@ -191,6 +195,7 @@ class ResultScreen(QWidget):
         self.retry_button.clicked.connect(self.main_app.show_setting_screen)
 
         layout.addWidget(self.result_label)
+        layout.addWidget(self.duration_label)
         layout.addWidget(self.total_clicks_label)
         layout.addWidget(self.avg_cps_label)
         layout.addWidget(self.max_cps_label)
@@ -203,9 +208,12 @@ class ResultScreen(QWidget):
         if duration == 1:
             max_cps = avg_cps
 
+        self.duration_label.setText(f"測定時間: {duration}秒")
         self.total_clicks_label.setText(f"総クリック数: {total_clicks}")
         self.avg_cps_label.setText(f"平均 CPS: {avg_cps:.2f}")
         self.max_cps_label.setText(f"最大 CPS: {max_cps:.2f}")
+        self.graph_widget.setXRange(0, duration)
+        self.graph_widget.setYRange(0, max(cps_history)+1)
         self.cps_plot.setData(np.arange(len(cps_history)), cps_history)
 
 class CPSCounter(QWidget):
