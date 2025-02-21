@@ -93,6 +93,7 @@ class CPSMeasurementScreen(QWidget):
         self.graph_widget.setYRange(0, 10)
         self.cps_plot = self.graph_widget.plot([], [], pen="r")
         layout.addWidget(self.graph_widget)
+        self.graph_widget.setFixedHeight(200)
 
         self.setLayout(layout)
 
@@ -178,6 +179,14 @@ class ResultScreen(QWidget):
         self.total_clicks_label = QLabel("総クリック数: 0")
         self.avg_cps_label = QLabel("平均 CPS: 0")
         self.max_cps_label = QLabel("最大 CPS: 0")
+
+        self.graph_widget = pg.PlotWidget()
+        self.graph_widget.setTitle("CPS推移")
+        self.graph_widget.setLabel("left", "CPS")
+        self.graph_widget.setLabel("bottom", "時間 (秒)")
+        self.graph_widget.setYRange(0, 10)
+        self.cps_plot = self.graph_widget.plot([], [], pen="b")
+
         self.retry_button = QPushButton("再測定")
         self.retry_button.clicked.connect(self.main_app.show_setting_screen)
 
@@ -185,6 +194,7 @@ class ResultScreen(QWidget):
         layout.addWidget(self.total_clicks_label)
         layout.addWidget(self.avg_cps_label)
         layout.addWidget(self.max_cps_label)
+        layout.addWidget(self.graph_widget)
         layout.addWidget(self.retry_button)
         self.setLayout(layout)
 
@@ -196,6 +206,7 @@ class ResultScreen(QWidget):
         self.total_clicks_label.setText(f"総クリック数: {total_clicks}")
         self.avg_cps_label.setText(f"平均 CPS: {avg_cps:.2f}")
         self.max_cps_label.setText(f"最大 CPS: {max_cps:.2f}")
+        self.cps_plot.setData(np.arange(len(cps_history)), cps_history)
 
 class CPSCounter(QWidget):
     def __init__(self):
