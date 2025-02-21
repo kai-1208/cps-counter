@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QLabel, QComboBox, QStackedWidget
+from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QLabel, QComboBox, QStackedWidget, QSlider
 from PySide6.QtCore import QTimer, Qt, QElapsedTimer
 from PySide6.QtGui import QMouseEvent, QPainter, QBrush, QColor
 from numba import njit
@@ -12,20 +12,55 @@ class SettingScreen(QWidget):
         self.setFixedSize(800, 600)
 
         layout = QVBoxLayout()
-        self.label = QLabel("測定時間を選択:")
+        self.label = QLabel("測定時間を選択してください:")
+        layout.addWidget(self.label)
         self.combo_box = QComboBox()
         self.combo_box.addItems([str(i) for i in range(1, 61)])
-        self.start_button = QPushButton("開始")
-        self.start_button.clicked.connect(self.start_measurement)
-
-        layout.addWidget(self.label)
         layout.addWidget(self.combo_box)
+
+        self.ripple_color_label = QLabel("波紋の色を選択してください")
+        layout.addWidget(self.ripple_color_label)
+
+        self.r_slider_ripple = self.create_slider("R", layout)
+        self.g_slider_ripple = self.create_slider("G", layout)
+        self.b_slider_ripple = self.create_slider("B", layout)
+
+        self.color_preview_ripple = QLabel()
+        self.color_preview_ripple.setFixedSize(100, 50)
+        self.update_color_preview(self.color_preview_ripple, self.r_slider_ripple, self.g_slider_ripple, self.b_slider_ripple)
+        layout.addWidget(self.color_preview_ripple, alignment=Qt.AlignCenter)
+
+        self.r_slider_ripple.valueChanged.connect(lambda: self.update_color_preview(self.color_preview_ripple, self.r_slider_ripple, self.g_slider_ripple, self.b_slider_ripple))
+        self.g_slider_ripple.valueChanged.connect(lambda: self.update_color_preview(self.color_preview_ripple, self.r_slider_ripple, self.g_slider_ripple, self.b_slider_ripple))
+        self.b_slider_ripple.valueChanged.connect(lambda: self.update_color_preview(self.color_preview_ripple, self.r_slider_ripple, self.g_slider_ripple, self.b_slider_ripple))
+
+        self.start_button = QPushButton("測定開始")
+        self.start_button.clicked.connect(self.start_measurement)
         layout.addWidget(self.start_button)
+
         self.setLayout(layout)
+
+    def create_slider(self, label_text, layout):
+        label = QLabel(f"{label_text}: 0")
+        layout.addWidget(label)
+
+        slider = QSlider(Qt.Horizontal)
+        slider.setRange(0, 255)
+        slider.setValue(255)
+        slider.valueChanged.connect(lambda: label.setText(f"{label_text}: {slider.value()}"))
+
+        layout.addWidget(slider)
+        return slider
+
+    def update_color_preview(self, preview_label, r_slider, g_slider, b_slider):
+        r = r_slider.value()
+        g = g_slider.value()
+        b = b_slider.value()
+        preview_label.setStyleSheet(f"background-color: rgb({r}, {g}, {b});")
 
     def start_measurement(self):
         duration = int(self.combo_box.currentText())
-        self.main_app.start_cps_measurement(duration)
+        self.main_app.start_cps_measurement(duration, (self.r_slider_ripple.value(), self.g_slider_ripple.value(), self.b_slider_ripple.value()))
 
 class CPSMeasurementScreen(QWidget):
     def __init__(self, main_app):
@@ -89,7 +124,7 @@ class CPSMeasurementScreen(QWidget):
             self.max_cps_label.setText(f"最大 CPS: {self.max_cps:.2f}")
 
     def update_ripples(self):
-        self.ripples = expand(self.ripples)
+        self.ripples = expand(self.ripples, 70, 15)
         self.update()
 
     
@@ -100,7 +135,7 @@ class CPSMeasurementScreen(QWidget):
         # すべての波紋を描画
         for x, y, alpha, radius in self.ripples:
             if alpha > 0:
-                painter.setBrush(QBrush(QColor(0, 150, 255, int(alpha))))
+                painter.setBrush(QBrush(QColor(self.ripple_color.red(), self.ripple_color.green(), self.ripple_color.blue(), int(alpha))))
                 painter.drawEllipse(int(x - radius / 2), int(y - radius / 2), int(radius), int(radius))
 
     def finish_measurement(self):
@@ -110,11 +145,11 @@ class CPSMeasurementScreen(QWidget):
         self.main_app.show_result_screen(self.click_count, self.max_cps, self.duration / 1000, self.cps_history)
 
 @njit
-def expand(ripples):
+def expand(ripples, growth_rate, fade_rate):
     for i in range(len(ripples)):
         if ripples[i, 2] > 0:
-            ripples[i, 3] += 70
-            ripples[i, 2] = max(0, ripples[i, 2]-15)
+            ripples[i, 3] += growth_rate
+            ripples[i, 2] = max(0, ripples[i, 2] - fade_rate)
     return ripples
 
 class ResultScreen(QWidget):
@@ -169,7 +204,8 @@ class CPSCounter(QWidget):
     def show_setting_screen(self):
         self.stack.setCurrentWidget(self.setting_screen)
 
-    def start_cps_measurement(self, duration):
+    def start_cps_measurement(self, duration, ripple_color):
+        self.measurement_screen.ripple_color = QColor(*ripple_color)
         self.stack.setCurrentWidget(self.measurement_screen)
         self.measurement_screen.start_measurement(duration)
 
