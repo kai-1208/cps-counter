@@ -4,6 +4,7 @@ from PySide6.QtGui import QMouseEvent, QPainter, QBrush, QColor
 from numba import njit
 import numpy as np
 import sys
+import pyqtgraph as pg
 
 class SettingScreen(QWidget):
     def __init__(self, main_app):
@@ -84,6 +85,15 @@ class CPSMeasurementScreen(QWidget):
         layout.addWidget(self.label)
         layout.addWidget(self.cps_label)
         layout.addWidget(self.max_cps_label)
+
+        self.graph_widget = pg.PlotWidget()
+        self.graph_widget.setTitle("CPS推移")
+        self.graph_widget.setLabel("left", "CPS")
+        self.graph_widget.setLabel("bottom", "時間 (秒)")
+        self.graph_widget.setYRange(0, 10)
+        self.cps_plot = self.graph_widget.plot([], [], pen="r")
+        layout.addWidget(self.graph_widget)
+
         self.setLayout(layout)
 
     def start_measurement(self, duration):
@@ -92,6 +102,7 @@ class CPSMeasurementScreen(QWidget):
         self.elapsed_timer = QElapsedTimer()
         self.duration = duration * 1000
         self.cps_history = []
+        self.time_history = []
         self.timer = QTimer()
         self.timer.timeout.connect(self.update_cps)
         self.timer.start(100)
@@ -113,21 +124,26 @@ class CPSMeasurementScreen(QWidget):
         if elapsed_time > 0:
             current_cps = self.click_count / elapsed_time
             self.cps_history.append(current_cps)
+            self.time_history.append(elapsed_time)
 
             # 直近1秒間の CPS を計算
             if len(self.cps_history) >= 10:  # 1秒ごとに記録
-                last_10_intervals = self.cps_history[-10:]  # 最新10個取得
-                avg_last_1s_cps = sum(last_10_intervals) / len(last_10_intervals)
+                avg_last_1s_cps = sum(self.cps_history[-10:]) / len(self.cps_history[-10:])
                 self.max_cps = max(self.max_cps, avg_last_1s_cps)
 
             self.cps_label.setText(f"CPS: {current_cps:.2f}")
             self.max_cps_label.setText(f"最大 CPS: {self.max_cps:.2f}")
 
+            self.update_cps_graph()
+
+    def update_cps_graph(self):
+        self.cps_plot.setData(self.time_history, self.cps_history)
+        self.graph_widget.setYRange(0, max(self.cps_history)+1)
+
     def update_ripples(self):
         self.ripples = expand(self.ripples, 70, 15)
         self.update()
 
-    
     def paintEvent(self, event):
         painter = QPainter(self)
         painter.setPen(Qt.NoPen)
